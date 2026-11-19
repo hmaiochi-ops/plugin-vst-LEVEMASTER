@@ -1,0 +1,42 @@
+name: Build VST3
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows
+          - os: macos-latest
+            name: macos
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compilar
+        run: cmake --build build --config Release --parallel 4
+
+      - name: Assinar (ad-hoc, macOS)
+        if: matrix.name == 'macos'
+        run: |
+          find build -name "LeveMaster.vst3" -maxdepth 6 -type d -exec codesign --force --deep -s - {} \;
+
+      - name: Enviar artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: LeveMaster-${{ matrix.name }}-VST3
+          path: |
+            build/LeveMaster_artefacts/VST3
+            build/LeveMaster_artefacts/Release/VST3
+          if-no-files-found: error
