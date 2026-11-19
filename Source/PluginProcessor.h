@@ -61,26 +61,40 @@ public:
         return apvts.getParameter (ids::bypass);
     }
 
+    double getCurrentSampleRate() const { return sampleRate; }
+    void resetLufs() { resetLufsFlag.store (true); }
+
     juce::AudioProcessorValueTreeState apvts;
 
-    // medidores lidos pela interface (valores em dB)
-    std::atomic<float> meterCompGr { 0.0f }, meterLimGr { 0.0f }, meterPeak { -120.0f };
+    // Medidores lidos pela interface
+    std::atomic<float> meterCompGr      { 0.0f };
+    std::atomic<float> meterLimGr       { 0.0f };
+    std::atomic<float> meterPeak        { -120.0f };
+    std::atomic<float> meterPeakL       { -120.0f };
+    std::atomic<float> meterPeakR       { -120.0f };
+    std::atomic<float> meterLufsMom     { -70.0f };
+    std::atomic<float> meterLufsShort   { -70.0f };
+    std::atomic<float> meterLufsInt     { -70.0f };
+    std::atomic<float> meterPhase       { 1.0f };
+    std::atomic<float> meterInLevel     { -120.0f };
 
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
     std::atomic<float>* raw (const char* id) { return apvts.getRawParameterValue (id); }
 
-    // parâmetros (ponteiros para os valores atômicos)
     std::atomic<float> *pIn, *pBypEq, *pBass, *pMid, *pTreble, *pBypComp, *pThresh, *pRatio, *pAttack,
                        *pRelease, *pMix, *pBypSat, *pDrive, *pBypWidth, *pWidth, *pBypLim, *pPush,
                        *pCeiling, *pLimRel, *pOut;
 
+    std::atomic<bool> resetLufsFlag { false };
     double sampleRate = 44100.0;
     int maxBlockSize = 512;
 
     leve::Eq3 eq;
     leve::LinkedCompressor comp;
     leve::LookaheadLimiter limiter;
+    leve::LufsMeter lufsMeter;
+
     juce::dsp::Oversampling<float> oversampler { 2, 1,
         juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, true, true };
 
