@@ -1,3 +1,7 @@
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#include <cmath>
 #pragma once
 // DSP do LeveMaster — só biblioteca padrão (sem JUCE), para poder testar isolado.
 #include <algorithm>
